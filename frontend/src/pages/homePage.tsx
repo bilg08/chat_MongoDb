@@ -1,7 +1,7 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-
+import { useIsUserLoggedContext } from "../context/isUserLogged";
 async function GetAccessTokenFromLocalStorage() {
   const token = await localStorage.getItem("token");
   return token
@@ -21,7 +21,10 @@ export const HomePage = () => {
   const [allUsers, setAllUsers] = useState([{ email: "", _id: "" }]);
   const [friendRequests, setFriendRequests] = useState([]);
   const [chatRoom, setChatRoom] = useState('');
-  const [message,setMessage] = useState('')
+  const [message, setMessage] = useState('');
+  const listRef = useRef<HTMLElement | any>();
+  const {setIsUserLogged} = useIsUserLoggedContext()
+
 
   async function getChats() {
     const accessToken = await GetAccessTokenFromLocalStorage();
@@ -32,9 +35,18 @@ export const HomePage = () => {
         },
       });
       setMessages(data.data.data)
+      scrollToLastMessage()
     } catch (error) { }
 
-}
+  }
+  function scrollToLastMessage() {
+    let lastChild = listRef.current.lastChild;
+    lastChild.scrollIntoView({
+      block: 'end',
+      inline: "nearest",
+      behavior:'smooth'
+    });
+  }
   useEffect(() => {
     getChats();
   },[chatRoom,IsSendMessage])
@@ -51,6 +63,11 @@ export const HomePage = () => {
     } catch (error) { }
   }
 
+  async function signOut() {
+    await localStorage.clear();
+    setIsUserLogged(false)
+
+}
 
 
   async function getTakeAllUsersData() {
@@ -143,11 +160,6 @@ export const HomePage = () => {
     let socket = connectChatServer();
     socket.onAny((type, message) => {
       if(message)   setSendMessage(e=>!e)
-
-      // if (type === "chat message") {
-        // console.log(message)
-        // setMessages((m) => [...m, message]);
-      // }
     });
     return () => {
       socket.disconnect();
@@ -188,11 +200,11 @@ export const HomePage = () => {
           </div>
 
 
-
+<button onClick={()=>signOut()} className="p-2 bg-white rounded m-auto">Гарах</button>
         </div>
       </div>
       <div style={{ position: "relative", width: `80%`, background: "red" }}>
-        <ul id="messages" style={{overflow:'scroll',height:`400px`}} className="bg-pink-200">
+        <ul ref={listRef} id="messages" style={{overflow:'scroll',height:`400px`}} className="bg-pink-200">
           {messages.map((message, i) => (
             <li>{message.message}</li>
           ))}
@@ -230,6 +242,7 @@ export const HomePage = () => {
           </button>
         </form>
       </div>
+
     </div>
   );
 };
