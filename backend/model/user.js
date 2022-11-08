@@ -16,6 +16,11 @@ const UserScheme = new mongoose.Schema({
     required: true,
     default:[]
   },
+  pendingFriendRequest: {
+    type: Array,
+    required: true,
+    default:[]
+  },
   chatRooms: {
     type: Array,
     required: true,
@@ -39,7 +44,8 @@ UserScheme.pre("save", async function () {
 
 UserScheme.methods.getJsonWebToken = function () {
   const token = jwt.sign(
-    { id: this._id },
+    { id: this._id},
+
     "hahahmongodb",
     { expiresIn: "1d" }
   );
