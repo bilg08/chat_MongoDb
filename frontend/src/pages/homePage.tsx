@@ -14,16 +14,30 @@ const connectChatServer = () => {
   return socket;
 };
 export const HomePage = () => {
-  const [userInput, setUserInput] = useState("");
   const [IsSendMessage, setSendMessage] = useState(false);
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState([{createdAt:"",id:"",message:"",_id:""}]);
   const [receiver, setReceiver] = useState('');
-  const [friends, setFriends] = useState<string[]>([])
+  const [friends, setFriends] = useState([{friend:'',chatRoomName:""}])
   const [allUsers, setAllUsers] = useState([{ email: "", _id: "" }]);
-  const [friendRequests,setFriendRequests] = useState([])
+  const [friendRequests, setFriendRequests] = useState([]);
+  const [chatRoom, setChatRoom] = useState('');
+  const [message,setMessage] = useState('')
 
+  async function getChats() {
+    const accessToken = await GetAccessTokenFromLocalStorage();
+    try {
+      const data = await axios.get(`http://localhost:8000/friends/${chatRoom}/chats`, {
+        headers: {
+          Authorization: `Bearer ` + accessToken,
+        },
+      });
+      setMessages(data.data.data)
+    } catch (error) { }
 
-
+}
+  useEffect(() => {
+    getChats();
+  },[chatRoom,IsSendMessage])
 
   async function getFriendRequests() {
     const accessToken = await GetAccessTokenFromLocalStorage()
@@ -68,7 +82,6 @@ export const HomePage = () => {
         },
       });
       setFriends(data.data.data)
-      // setAllUsers(data.data.data);
     } catch (error) { }
   }
 
@@ -101,12 +114,26 @@ export const HomePage = () => {
 
     } catch (error) { }
   }
+  useEffect(() => {
+   async function sendMessage() {
+    const accessToken = await GetAccessTokenFromLocalStorage()
+    try {
+      const data = await axios.post(`http://localhost:8000/friends/${chatRoom}/sendMessage`, {message} ,{
+        headers: {
+          Authorization: `Bearer ` + accessToken,
+        },
+      });
+
+    } catch (error) { }
+    }
+    if(message!==""&&chatRoom!=="") sendMessage()
+},[IsSendMessage])
 
 
 
   useEffect(() => {
     let socket = connectChatServer();
-    socket.emit("chat message", userInput);
+    socket.emit("chat message", message);
     return () => {
       socket.disconnect();
     };
@@ -115,9 +142,12 @@ export const HomePage = () => {
   useEffect(() => {
     let socket = connectChatServer();
     socket.onAny((type, message) => {
-      if (type === "chat message") {
-        setMessages((m) => [...m, message]);
-      }
+      if(message)   setSendMessage(e=>!e)
+
+      // if (type === "chat message") {
+        // console.log(message)
+        // setMessages((m) => [...m, message]);
+      // }
     });
     return () => {
       socket.disconnect();
@@ -131,7 +161,11 @@ export const HomePage = () => {
             <h1 className="text-lg text-white">Найзууд</h1>
           </div>
           <ul className="w-full flex justify-center items-center flex-col">
-            {friends.map(friend => <li key={friend}>{friend} <button className="p-2 bg-white rounded m-auto">Харилцах</button></li>)}
+            {friends.map(friend => <li key={friend.friend}>{friend.friend}
+              <button
+                onClick={() =>setChatRoom(friend.chatRoomName.toLowerCase())}
+                className="p-2 bg-white rounded m-auto">
+                Харилцах</button></li>)}
           </ul>
         </div>
         <div>
@@ -149,7 +183,6 @@ export const HomePage = () => {
               {friendRequests.length > 0 && friendRequests.map((user, i) => <li key={i} className="w-full flex justify-center items-center flex-col"><span className="flex flex-col">{user}</span>
               <button onClick={()=>confirmFriendRequest(user)}
               className="p-2 bg-white rounded m-auto"
-                
               >Найз болох</button></li>)}
             </ul>
           </div>
@@ -159,9 +192,9 @@ export const HomePage = () => {
         </div>
       </div>
       <div style={{ position: "relative", width: `80%`, background: "red" }}>
-        <ul id="messages">
+        <ul id="messages" style={{overflow:'scroll',height:`400px`}} className="bg-pink-200">
           {messages.map((message, i) => (
-            <li key={message + i}>{message}</li>
+            <li>{message.message}</li>
           ))}
         </ul>
         <form
@@ -178,16 +211,20 @@ export const HomePage = () => {
           id="form"
           action="">
           <input
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             className="w-[80%] bg-green-400"
             id="input"
           />
           <button
             onClick={async (e) => {
-              e.preventDefault();
+              if (message !== "" && chatRoom !== "") {
+                e.preventDefault();
               await setSendMessage((e) => !e);
-              setUserInput("");
+              setMessage("");
+              } else {
+                 e.preventDefault();
+              }
             }}>
             Илгээх
           </button>

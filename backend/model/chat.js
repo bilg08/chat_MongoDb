@@ -2,16 +2,12 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const ChatSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: [true, "ХЭРЭГЛЭГЧИЙН EMAIL ОРУУЛНА УУ"],
-    unique: true,
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      "БУРУУ EMAIL БАЙНА",
-    ],
+  id: {
+    type: mongoose.Schema.ObjectId,
+    ref: "User",
+    required: true,
   },
-  message:{
+  message: {
     type: String,
   },
   createdAt: {

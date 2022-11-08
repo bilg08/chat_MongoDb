@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const dotenv = require('dotenv');
-const connectDb = require('./db')
+const connectDb = require("./db");
 const userRouter = require('./routes/user');
 const chatRouter = require('./routes/chat');
 const friendsRouter = require('./routes/friends')
@@ -9,7 +9,6 @@ const errorHandler = require('./middleware/error');
 const cors = require('cors');
 const http = require("http").Server(app);
 app.use(cors())
-
 const socketIO = require("socket.io")(http, {
   cors: {
     origin: "http://localhost:3000",
