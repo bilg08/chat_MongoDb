@@ -16,7 +16,6 @@ const connectChatServer = () => {
 export const HomePage = () => {
   const [IsSendMessage, setSendMessage] = useState(false);
   const [messages, setMessages] = useState([{createdAt:"",id:"",message:"",_id:""}]);
-  const [receiver, setReceiver] = useState('');
   const [friends, setFriends] = useState([{friend:'',chatRoomName:""}])
   const [allUsers, setAllUsers] = useState([{ email: "", _id: "" }]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -78,6 +77,7 @@ export const HomePage = () => {
           Authorization: `Bearer ` + accessToken,
         },
       });
+      console.log(data.data)
       setAllUsers(data.data.data);
     } catch (error) { }
   }
@@ -200,13 +200,13 @@ export const HomePage = () => {
           </div>
 
 
-<button onClick={()=>signOut()} className="p-2 bg-white rounded m-auto">Гарах</button>
+      <button onClick={()=>signOut()} className="p-2 bg-white rounded m-auto">Гарах</button>
         </div>
       </div>
       <div style={{ position: "relative", width: `80%`, background: "red" }}>
         <ul ref={listRef} id="messages" style={{overflow:'scroll',height:`400px`}} className="bg-pink-200">
           {messages.map((message, i) => (
-            <li>{message.message}</li>
+            <li key={message.message+i}>{message.message}</li>
           ))}
         </ul>
         <form

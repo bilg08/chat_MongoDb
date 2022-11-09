@@ -4,7 +4,6 @@ import { HomePage } from './pages/homePage';
 import { LoginPage } from './pages/loginPage';
 function App() {
   const {isUserLogged} = useIsUserLoggedContext();
-  console.log(isUserLogged);
   return (
     <Routes>
       {isUserLogged===true ? <>

@@ -41,11 +41,31 @@ exports.getFriends = asyncHandler(async(req,res,next) => {
 
 exports.getUsers = asyncHandler(async(req,res,next) => {
 
-  const Users = await User.find();
-  const data = Users.filter(user=>user._id.toString()!==req.user.id);
+  const AllUsers = await User.find();
+  const requested_User = await User.findById(req.user.id);
+  const userFriends = requested_User.friends;
+  const users_except_requestedUser = AllUsers.filter(user => user._id.toString() !== req.user.id);
+  let users_except_userFriends = [];
+
+
+  for (let i = 0; i < AllUsers.length; i++) {
+    //data[i]._id.toString()  a user id
+    for (let j = 0; j < userFriends.length; j++) {
+        userFriends[j].friend !== users_except_requestedUser[i]._id.toString()?users_except_userFriends.push(
+          users_except_requestedUser[i]._id.toString()
+      ) : ""
+      // if (
+      //   userFriends[j].friend !== users_except_requestedUser[i]._id.toString()
+      // ) {
+        // users_except_userFriends.push(
+        //   users_except_requestedUser[i]._id.toString()
+        // );
+      // }
+    }
+  }
   
   res.status(200).json({
     success: true,
-    data:data,
+    data:users_except_userFriends,
   });
 })

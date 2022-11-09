@@ -1,9 +1,6 @@
-const express = require('express');
 const  mongoose = require('mongoose');
 const ChatSchema = require('../model/chat');
 const UserScheme = require('../model/user');
-const connectDb = require("../db");
-const Collection = require("../db");
 exports.friendRequest = async(req,res) => {
     const userId = req.user.id;
     const receiverId = req.body.receiver;
@@ -49,8 +46,12 @@ exports.confirmFriendRequest = async(req,res) => {
    &&(!personWhoRequestedFr.friends.includes(req.user.id))
    ) {
     const chatRoomName = `chatRoom_${req.user.id}_${req.body.receiver}`;
-    const index = personWhoTookFrPendingRequest.indexOf(req.body.receiver)
-    await UserScheme.findByIdAndUpdate(req.user.id,{pendingFriendRequest:personWhoTookFrPendingRequest.splice(index,1)});
+     const index = personWhoTookFrPendingRequest.indexOf(req.body.receiver);
+    await UserScheme.findByIdAndUpdate(req.user.id, {
+      pendingFriendRequest: personWhoTookFrPendingRequest.filter(
+        (user) => user !== req.body.receiver
+      ),
+    });
     await UserScheme.findByIdAndUpdate(req.user.id, {
       friends: [
         ...personWhoTookFrFriends,
@@ -66,13 +67,12 @@ exports.confirmFriendRequest = async(req,res) => {
        });
 
     const chatRoom = await mongoose.model(chatRoomName, ChatSchema);
-    console.log(await UserScheme.findById(req.user.id))
   }
 }
 
 exports.getFriends = async (req, res) => {
     const userId = req.user.id;
-    const user = await UserScheme.findById(userId);
+  const user = await UserScheme.findById(userId);
     res.status(200).json({
       data:user.friends
     });
@@ -95,7 +95,6 @@ exports.sendMessage = async(req, res) => {
     const { chatroom } = req.params;
     const { message } = req.body;
     const sender = req.user.id;
-    console.log(message,chatroom)
     const chatRoomInMongoDb = await mongoose.model(chatroom, ChatSchema);
 
     
@@ -103,10 +102,4 @@ exports.sendMessage = async(req, res) => {
             id: sender,
             message: message,
             });
-    // const chatRoomInMongoDb = await mongoose.model(chatRoom, ChatSchema)
-    // console.log(chatRoomInMongoDb)
-    // chatRoomInMongoDb.create({
-    //   id: senderId,
-    //   message: "yu baina",
-    // });
 }
